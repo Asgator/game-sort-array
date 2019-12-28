@@ -3,10 +3,13 @@ import cx from 'classnames';
 import shuffle from 'lodash/shuffle';
 import chunk from 'lodash/chunk';
 import flatten from 'lodash/flatten';
+import isEmpty from 'lodash/isEmpty';
+
+import LIGHT_FINGERS_SRC from './finger.png';
 
 import './App.css';
 
-const savedLength = Number(localStorage.getItem('savedLength')) || 2;
+const savedLength = Number(localStorage.getItem('savedLength')) || 1;
 const savedNumbers = localStorage.getItem('savedNumbers') ? JSON.parse(localStorage.getItem('savedNumbers')) : {};
 
 const createArray = (length) => {
@@ -31,7 +34,7 @@ class App extends React.Component {
     }
 
     startTimer(length) {
-        const time = 800 - (length * 10);
+        const time = 800 - (length * 15);
 
         this.timer = setInterval(() => {
             this.setState({
@@ -57,10 +60,14 @@ class App extends React.Component {
         return data;
     }
 
-    checkArray = () => {
+    handleOnDown = (e) => {
+        e.currentTarget.classList.add('press-finger')
+
         const copyArray = createArray(this.state.length);
         let savedNumbers = {};
         const resetLength = Object.keys(this.state.savedNumbers).length;
+
+        clearInterval(this.timer);
 
         const isGood = this.state.array.every((item, i) => {
             const isGood = item === copyArray[i];
@@ -78,32 +85,31 @@ class App extends React.Component {
             return isGood;
         });
 
+        let newLength = this.state.length;
+
         if (!isGood) {
-            this.setState({
-                isRun: false,
-                savedNumbers
-            });
+            if (isEmpty(savedNumbers) && isEmpty(this.state.savedNumbers)) {
+                newLength--
+            }
+        } else {
+            savedNumbers = {};
 
-            localStorage.setItem('savedNumbers', JSON.stringify(savedNumbers));
-
-            return;
+            newLength++;
         }
 
-        const newLength = this.state.length + 1;
-
         localStorage.setItem('savedLength', newLength);
-        localStorage.setItem('savedNumbers', JSON.stringify({}));
-
-        clearInterval(this.timer);
+        localStorage.setItem('savedNumbers', JSON.stringify(savedNumbers));
 
         this.setState({
-            array: this.shuffle(newLength, {}),
+            array: this.shuffle(newLength, savedNumbers),
             length: newLength,
-            savedNumbers: {}
+            savedNumbers
         });
 
         this.startTimer(newLength)
     }
+
+    handleOnUp = (e) => e.currentTarget.classList.remove('press-finger');
 
     renderItem = (i) => <div key={i} className={cx('item', { active: this.state.savedNumbers[i] })}>{i}</div>;
 
@@ -116,16 +122,20 @@ class App extends React.Component {
                     Easy sort array
                 </div>
                 <div className="sub-title">
-                    level:<div className="points"> {this.state.length - 2}</div>
+                    level:<div className="points"> {this.state.length - 1}</div>
                 </div>
 
                 <div className="array">
                     {array.map(this.renderItem)}
                 </div>
 
-                <div className="button" onClick={this.handleToggle}>
-                    Check
-                </div>
+                <img
+                    src={LIGHT_FINGERS_SRC}
+                    alt="finger"
+                    onMouseDown={this.handleOnDown}
+                    onMouseUp={this.handleOnUp}
+                    className="finger"
+                />
             </div>
         );
     }
