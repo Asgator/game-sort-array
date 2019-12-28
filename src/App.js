@@ -16,6 +16,8 @@ const createArray = (length) => {
     return Array(length).fill(length).map((_, i) => i);
 };
 
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+
 class App extends React.Component {
     constructor() {
         super();
@@ -34,13 +36,13 @@ class App extends React.Component {
     }
 
     startTimer(length) {
-        const time = 800 - (length * 15);
+        const time = 800 - (length * 20);
 
         this.timer = setInterval(() => {
             this.setState({
                 array: this.shuffle(this.state.length, this.state.savedNumbers)
             })
-        }, time < 350 ? 350 : time);
+        }, time);
     }
 
     handleToggle = () => {
@@ -61,7 +63,7 @@ class App extends React.Component {
     }
 
     handleOnDown = (e) => {
-        e.currentTarget.classList.add('press-finger')
+        e.currentTarget.classList.add('press-finger');
 
         const copyArray = createArray(this.state.length);
         let savedNumbers = {};
@@ -132,8 +134,10 @@ class App extends React.Component {
                 <img
                     src={LIGHT_FINGERS_SRC}
                     alt="finger"
-                    onMouseDown={this.handleOnDown}
-                    onMouseUp={this.handleOnUp}
+                    onMouseDown={!isMobile ? this.handleOnDown : undefined}
+                    onMouseUp={!isMobile ? this.handleOnUp : undefined}
+                    onTouchStart={isMobile ? this.handleOnDown : undefined}
+                    onTouchEnd={isMobile ? this.handleOnUp : undefined}
                     className="finger"
                 />
             </div>
